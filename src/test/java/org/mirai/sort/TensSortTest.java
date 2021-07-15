@@ -1,0 +1,316 @@
+package org.mirai.sort;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
+
+/**
+ * @author mirau on 2021/7/15.
+ * @version 1.0
+ */
+public class TensSortTest {
+
+    private int[] arr = new int[5];
+
+    @Before
+    public void before() {
+        Random random = new Random(System.currentTimeMillis());
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = random.nextInt(100);
+        }
+        System.out.println(Arrays.toString(arr));
+    }
+
+    @After
+    public void after() {
+        System.out.println(Arrays.toString(arr));
+    }
+
+    @Test
+    public void testSort() {
+//        bubbleSort(arr);
+//        chooseSort(arr);
+//        insertSort(arr);
+//        quicklySort(arr);
+//        mergeSort(arr);
+//        countSort(arr);
+        bucketSort(arr);
+    }
+
+    private static void swap(int[] arr, int a, int b) {
+        if (a != b) {
+            arr[a] = arr[a] ^ arr[b];
+            arr[b] = arr[a] ^ arr[b];
+            arr[a] = arr[a] ^ arr[b];
+        }
+    }
+
+    /**
+     * 冒泡排序
+     * 时间复杂度：O(n^2)
+     * 空间复杂度：O(1)
+     * 是否稳定排序：是
+     */
+    public void bubbleSort(int[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            // 设置标记，用于判断是否有位置交换
+            boolean noSwap = true;
+            for (int j = 0; j < arr.length - 1; j++) {
+                if (arr[j] > arr[j + 1]) {
+                    noSwap = false;
+                    swap(arr, j, j + 1);
+                }
+            }
+            if (noSwap) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * 选择排序
+     * 时间复杂度：O(n^2)
+     * 空间复杂度：O(1)
+     * 稳定排序：否
+     */
+    public void chooseSort(int[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            // 最小值的数组下标
+            int minIndex = i;
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[minIndex] > arr[j]) {
+                    minIndex = j;
+                }
+            }
+            swap(arr, minIndex, i);
+        }
+    }
+
+    /**
+     * 插入排序
+     * 时间复杂度：O(n^2)
+     * 空间复杂度：O(1)
+     * 稳定排序：是
+     */
+    public void insertSort(int[] arr) {
+        for (int i = 1; i < arr.length; i++) {
+            int currValue = arr[i];
+            int beforeIndex = i - 1;
+            while (beforeIndex >= 0 && arr[beforeIndex] > currValue) {
+                arr[beforeIndex + 1] = arr[beforeIndex];
+                beforeIndex--;
+            }
+            arr[beforeIndex + 1] = currValue;
+        }
+    }
+
+    /**
+     * 快速排序
+     * 时间复杂度：O(nlogn)
+     * 空间复杂度：O(1)
+     * 稳定排序：否
+     */
+    public void quicklySort(int[] arr) {
+        int begin = 0;
+        int end = arr.length - 1;
+        myQuickSort(arr, begin, end);
+    }
+
+    private void myQuickSort(int[] arr, int begin, int end) {
+        // 结束递归
+        if (begin >= end) {
+            return;
+        }
+
+        // 分区值
+        int pivot = partition2(arr, begin, end);
+        myQuickSort(arr, begin, pivot - 1);
+        myQuickSort(arr, pivot + 1, end);
+    }
+
+    /**
+     * 指针交换法
+     */
+    private int partition(int[] arr, int begin, int end) {
+        // 以左边为基准值
+        int pivot = begin;
+        int pivotValue = arr[begin];
+        while (begin < end) {
+            // 指针交换法
+            // 因为以最左边为基准值，所以从右边开找比基准值小的数
+            while (begin < end && arr[end] > pivotValue) {
+                end--;
+            }
+            // 从左边找比基准值大的数
+            while (begin < end && arr[begin] <= pivotValue) {
+                begin++;
+            }
+            if (begin < end) {
+                swap(arr, begin, end);
+            }
+        }
+        // 左边交界处和起始基准值交换
+        swap(arr, pivot, end);
+        return end;
+    }
+
+    /**
+     * 占坑法
+     */
+    private int partition2(int[] arr, int begin, int end) {
+        // 以左边第一个数为基准值，坑为左边
+        int pivotValue = arr[begin];
+        while (begin < end) {
+            // 从右边开始，找到比坑位小的数
+            while (begin < end && arr[end] > arr[begin]) {
+                end--;
+            }
+            if (begin < end) {
+                // 右边为坑
+                arr[begin] = arr[end];
+            }
+            // 从左边开始，找到比坑位小的数
+            while (begin < end && arr[begin] <= pivotValue) {
+                begin++;
+            }
+            if (begin < end) {
+                // 左边为坑
+                arr[end] = arr[begin];
+            }
+        }
+        // 左右交界处，填入起始坑值
+        arr[end] = pivotValue;
+        return end;
+    }
+
+    /**
+     * 归并排序
+     * 时间复杂度：O(nlogn)
+     * 空间复杂度：O(n)
+     * 稳定排序：是
+     */
+    public void mergeSort(int[] arr) {
+        int left = 0;
+        int right = arr.length - 1;
+        // 申请临时数组，大小和原数组一样
+        int[] tempArr = new int[arr.length];
+        myMergeSort(arr, tempArr, left, right);
+    }
+
+    private void myMergeSort(int[] arr, int[] tempArr, int begin, int end) {
+        if (begin >= end) {
+            return;
+        }
+        int mid = (end - begin) / 2 + begin;
+        int lbegin = begin;
+        int rbegin = mid + 1;
+        myMergeSort(arr, tempArr, lbegin, mid);
+        myMergeSort(arr, tempArr, rbegin, end);
+
+        int k = begin;
+        // 合并两个数组
+        while (lbegin <= mid && rbegin <= end) {
+            tempArr[k++] = arr[lbegin] > arr[rbegin] ? arr[rbegin++] : arr[lbegin++];
+        }
+        // 左边还有未合并的元素
+        while (lbegin <= mid) {
+            tempArr[k++] = arr[lbegin++];
+        }
+        // 右边还有未合并的数组
+        while (rbegin <= end) {
+            tempArr[k++] = arr[rbegin++];
+        }
+
+        // 将temp 数组的元素，赋值到原数组
+        System.arraycopy(tempArr, begin, arr, begin, end - begin + 1);
+    }
+
+    /**
+     * 计数排序
+     * 时间复杂度：O(n+k)
+     * 空间复杂度：O(k)
+     * 稳定排序：是
+     */
+    public void countSort(int[] arr) {
+        int max = getMax(arr);
+        int min = getMin(arr);
+
+        // 创建一个数组，大小为 max-min+1
+        int[] tempArr = new int[max - min + 1];
+        // 给临时数组，初始化值为0
+        Arrays.fill(tempArr, 0);
+
+        // 遍历原数组，元素值-min,得到的值，即为临时数组下标
+        for (int i : arr) {
+            tempArr[i - min] += 1;
+        }
+
+        // 遍历临时数组，下标+min的值，填充到原来数组
+        int k = 0;
+        for (int i = 0; i < tempArr.length; i++) {
+            while (tempArr[i] > 0) {
+                arr[k++] = i + min;
+                tempArr[i]--;
+            }
+        }
+    }
+
+    /**
+     * 桶排序
+     * 时间复杂度：O(n+k)
+     * 空间复杂度：O(k)
+     * 稳定排序：是
+     */
+    public void bucketSort(int[] arr) {
+        double bucketSize = 5.0;
+        int max = getMax(arr);
+        int min = getMin(arr);
+
+        int bucketCount = (int) Math.floor((max - min) / bucketSize) + 1;
+        int[][] buckets = new int[bucketCount][0];
+        // 利用映射函数将数据分配到各个桶中
+        for (int j : arr) {
+            int index = (int) Math.floor((j - min) / bucketSize);
+            buckets[index] = arrAppend(buckets[index], j);
+        }
+
+        int arrIndex = 0;
+        for (int[] bucket : buckets) {
+            if (bucket.length <= 0) {
+                continue;
+            }
+            // 对每个桶进行排序，这里使用了插入排序
+            insertSort(bucket);
+            for (int value : bucket) {
+                arr[arrIndex++] = value;
+            }
+        }
+
+    }
+    /**
+     * 自动扩容，并保存数据
+     *
+     * @param arr
+     * @param value
+     */
+    private int[] arrAppend(int[] arr, int value) {
+        arr = Arrays.copyOf(arr, arr.length + 1);
+        arr[arr.length - 1] = value;
+        return arr;
+    }
+
+    private int getMax(int[] arr) {
+        return IntStream.of(arr).max().orElse(-1);
+    }
+
+    private int getMin(int[] arr) {
+        return IntStream.of(arr).min().orElse(-1);
+    }
+}
+
